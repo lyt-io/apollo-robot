@@ -1,12 +1,11 @@
 var five    = require('johnny-five');
 var port    = process.env.PORT || 8080;
-var io      = require('socket.io').listen(port);
-
-var server = require('http').createServer(function(req, res){ 
+var server  = require('http').createServer(function(req, res){
     // Send HTML headers and message
-    res.writeHead(200,{ 'Content-Type': 'text/html' }); 
-    res.end('<h1>Hello Socket Lover!</h1>');
+    res.writeHead(200,{ 'Content-Type': 'text/html' });
+    res.end('<h1>The cat robot is working.</h1>');
 });
+var io      = require('socket.io')(server);
 
 server.listen(port, function () {
   console.log('Server listening at port %d', port);
