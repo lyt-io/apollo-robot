@@ -2,6 +2,16 @@ var five    = require('johnny-five');
 var port    = process.env.PORT || 8080;
 var io      = require('socket.io').listen(port);
 
+var server = require('http').createServer(function(req, res){ 
+    // Send HTML headers and message
+    res.writeHead(200,{ 'Content-Type': 'text/html' }); 
+    res.end('<h1>Hello Socket Lover!</h1>');
+});
+
+server.listen(port, function () {
+  console.log('Server listening at port %d', port);
+});
+
 // Camera
 var spawn = require('child_process').spawn;
 var streamer = null;
@@ -87,7 +97,7 @@ var numUsers = 0;
 // Socket connection handler
 io.on('connection', function (socket) {
 
-    console.log('Server listening at port %d', port);
+    console.log('Connection to client established');
     
     var addedUser = false;
 
