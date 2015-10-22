@@ -242,7 +242,7 @@ io.on('connection', function (socket) {
         motor4.stop();
     });
 
-    proximity.on('data', function () {
+    proximity1.on('data', function () {
         io.sockets.emit('proximity1', this.in);
     });
     
