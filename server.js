@@ -91,10 +91,10 @@ board.on('ready', function() {
 
     proximity1 = new five.Proximity({
         controller: 'HCSR04',
-        pin: 16
+        pin: '16'
     });
 
-    proximity1.on('data', function() {
+    proximity1.on('change', function() {
         //io.sockets.emit('proximity1', this.in);
         console.log(this.in);
     });
