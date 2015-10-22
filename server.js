@@ -87,6 +87,11 @@ board.on('ready', function() {
         }
     });
 
+    proximity1 = new five.Proximity({
+        controller: 'HCSR04',
+        pin: 16
+    });
+
 });
 
 // Chatroom
@@ -235,6 +240,10 @@ io.on('connection', function (socket) {
         motor2.stop();
         motor3.stop();
         motor4.stop();
+    });
+
+    proximity.on('data', function () {
+        io.sockets.emit('proximity1', this.in);
     });
     
 });
