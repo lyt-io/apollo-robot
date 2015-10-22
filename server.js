@@ -94,6 +94,10 @@ board.on('ready', function() {
         pin: 16
     });
 
+    proximity1.data(function () {
+        io.sockets.emit('proximity1', this.in);
+    });
+
 });
 
 // Chatroom
@@ -243,9 +247,4 @@ io.on('connection', function (socket) {
         motor3.stop();
         motor4.stop();
     });
-
-    proximity1.on('data', function () {
-        io.sockets.emit('proximity1', this.in);
-    });
-    
 });
