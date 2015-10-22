@@ -42,6 +42,8 @@ var motor3;
 var motor4;
 var motorSpeed = 255;
 
+var proximity1;
+
 // Arduino
 var board = new five.Board();
 board.on('ready', function() {
