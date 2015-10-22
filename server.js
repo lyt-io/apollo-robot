@@ -94,7 +94,7 @@ board.on('ready', function() {
         pin: 16
     });
 
-    proximity1.data(function () {
+    proximity1.on('data', function() {
         io.sockets.emit('proximity1', this.in);
     });
 
