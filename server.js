@@ -95,8 +95,7 @@ board.on('ready', function() {
     });
 
     proximity1.on('change', function() {
-        //io.sockets.emit('proximity1', this.in);
-        console.log(this.in);
+        io.sockets.emit('proximity1', this.in);
     });
 
 });
