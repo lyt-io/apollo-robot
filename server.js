@@ -60,7 +60,7 @@ board.on('ready', function() {
         pins: {
             pwm: 6,
             dir: 15,
-            cdir: 4
+            cdir: 16
         }
     });
     // Front right
@@ -91,7 +91,7 @@ board.on('ready', function() {
 
     proximity1 = new five.Proximity({
         controller: 'HCSR04',
-        pin: '16'
+        pin: 4
     });
 
     proximity1.on('change', function() {
