@@ -91,7 +91,8 @@ board.on('ready', function() {
 
     proximity1 = new five.Proximity({
         controller: 'HCSR04',
-        pin: 4
+        pin: 4,
+        freq: 5000
     });
 
     proximity1.on('change', function() {
