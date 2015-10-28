@@ -92,160 +92,160 @@ board.on('ready', function() {
     proximity1 = new five.Proximity({
         controller: 'HCSR04',
         pin: 4,
-        freq: 500
+        freq: 250
     });
 
     proximity1.on('change', function() {
         io.sockets.emit('proximity1', this.in);
     });
 
-});
+    // Chatroom
+    var usernames = {};
+    var numUsers = 0;
 
-// Chatroom
-var usernames = {};
-var numUsers = 0;
+    // Socket connection handler
+    io.on('connection', function (socket) {
 
-// Socket connection handler
-io.on('connection', function (socket) {
+        console.log('Connection to client established');
+        
+        var addedUser = false;
 
-    console.log('Connection to client established');
-    
-    var addedUser = false;
+        if(streamer === null) {
+            var args = [
+                '-i', '/opt/mjpg-streamer/input_raspicam.so -fps 15 -q 50 -x 640 -y 360', 
+                '-o', '/opt/mjpg-streamer/output_http.so -p 9000 -w /opt/mjpg-streamer/www'
+            ];
+            streamer = spawn('/opt/mjpg-streamer/mjpg_streamer', args, { stdio: 'inherit' });
+        }
 
-    if(streamer === null) {
-        var args = [
-            '-i', '/opt/mjpg-streamer/input_raspicam.so -fps 15 -q 50 -x 640 -y 360', 
-            '-o', '/opt/mjpg-streamer/output_http.so -p 9000 -w /opt/mjpg-streamer/www'
-        ];
-        streamer = spawn('/opt/mjpg-streamer/mjpg_streamer', args, { stdio: 'inherit' });
-    }
-
-    socket.on('add user', function (username) {
-        socket.username = username;
-        // add the client's username to the global list
-        usernames[username] = username;
-        ++numUsers;
-        addedUser = true;
-        socket.emit('login', {
-            numUsers: numUsers
-        });
-        socket.broadcast.emit('user joined', {
-            username: socket.username,
-            numUsers: numUsers
-        });
-        console.log(socket.username + ' joined the party.')
-    });
-
-    socket.on('new message', function (data) {
-        socket.broadcast.emit('new message', {
-            username: socket.username,
-            message: data
-        });
-    });
-
-    socket.on('disconnect', function () {
-        // remove the username from global usernames list
-        if (addedUser) {
-            delete usernames[socket.username];
-            --numUsers;
-
-            socket.broadcast.emit('user left', {
+        socket.on('add user', function (username) {
+            socket.username = username;
+            // add the client's username to the global list
+            usernames[username] = username;
+            ++numUsers;
+            addedUser = true;
+            socket.emit('login', {
+                numUsers: numUsers
+            });
+            socket.broadcast.emit('user joined', {
                 username: socket.username,
                 numUsers: numUsers
             });
-            console.log(socket.username + ' left the party.');
-        }
-        // no more sockets, kill the stream
-        if (numUsers == 0 && streamer) {
-            streamer.kill()
-            streamer = null
-        }
+            console.log(socket.username + ' joined the party.')
+        });
+
+        socket.on('new message', function (data) {
+            socket.broadcast.emit('new message', {
+                username: socket.username,
+                message: data
+            });
+        });
+
+        socket.on('disconnect', function () {
+            // remove the username from global usernames list
+            if (addedUser) {
+                delete usernames[socket.username];
+                --numUsers;
+
+                socket.broadcast.emit('user left', {
+                    username: socket.username,
+                    numUsers: numUsers
+                });
+                console.log(socket.username + ' left the party.');
+            }
+            // no more sockets, kill the stream
+            if (numUsers == 0 && streamer) {
+                streamer.kill()
+                streamer = null
+            }
+        });
+
+        socket.on('camera up', function () {
+            cameraY = cameraY - cameraIncrement;
+            cameraTo(cameraX, cameraY);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'camera',
+                action: 'arrow-up'
+            });
+        });
+        socket.on('camera right', function () {
+            cameraX = cameraX - cameraIncrement;
+            cameraTo(cameraX, cameraY);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'camera',
+                action: 'arrow-right'
+            });
+        });
+        socket.on('camera down', function () {
+            cameraY = cameraY + cameraIncrement;
+            cameraTo(cameraX, cameraY);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'camera',
+                action: 'arrow-down'
+            });
+        });
+        socket.on('camera left', function () {
+            cameraX = cameraX + cameraIncrement;
+            cameraTo(cameraX, cameraY);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'camera',
+                action: 'arrow-left'
+            });
+        });
+        socket.on('motor forward', function () {
+            motor1.forward(motorSpeed);
+            motor2.reverse(motorSpeed);
+            motor3.forward(motorSpeed);
+            motor4.reverse(motorSpeed);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'motor',
+                action: 'arrow-up'
+            });
+        });
+        socket.on('motor reverse', function () {
+            motor1.reverse(motorSpeed);
+            motor2.forward(motorSpeed);
+            motor3.reverse(motorSpeed);
+            motor4.forward(motorSpeed);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'motor',
+                action: 'arrow-down'
+            });
+        });
+        socket.on('motor left', function () {
+            motor1.reverse(motorSpeed);
+            motor2.forward(motorSpeed);
+            motor3.forward(motorSpeed);
+            motor4.reverse(motorSpeed);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'motor',
+                action: 'arrow-left'
+            });
+        });
+        socket.on('motor right', function () {
+            motor1.forward(motorSpeed);
+            motor2.reverse(motorSpeed);
+            motor3.reverse(motorSpeed);
+            motor4.forward(motorSpeed);
+            io.sockets.emit('controlling', {
+                username: socket.username,
+                part: 'motor',
+                action: 'arrow-right'
+            });
+        });
+        socket.on('motor stop', function () {
+            motor1.stop();
+            motor2.stop();
+            motor3.stop();
+            motor4.stop();
+        });
     });
 
-    socket.on('camera up', function () {
-        cameraY = cameraY - cameraIncrement;
-        cameraTo(cameraX, cameraY);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'camera',
-            action: 'arrow-up'
-        });
-    });
-    socket.on('camera right', function () {
-        cameraX = cameraX - cameraIncrement;
-        cameraTo(cameraX, cameraY);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'camera',
-            action: 'arrow-right'
-        });
-    });
-    socket.on('camera down', function () {
-        cameraY = cameraY + cameraIncrement;
-        cameraTo(cameraX, cameraY);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'camera',
-            action: 'arrow-down'
-        });
-    });
-    socket.on('camera left', function () {
-        cameraX = cameraX + cameraIncrement;
-        cameraTo(cameraX, cameraY);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'camera',
-            action: 'arrow-left'
-        });
-    });
-    socket.on('motor forward', function () {
-        motor1.forward(motorSpeed);
-        motor2.reverse(motorSpeed);
-        motor3.forward(motorSpeed);
-        motor4.reverse(motorSpeed);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'motor',
-            action: 'arrow-up'
-        });
-    });
-    socket.on('motor reverse', function () {
-        motor1.reverse(motorSpeed);
-        motor2.forward(motorSpeed);
-        motor3.reverse(motorSpeed);
-        motor4.forward(motorSpeed);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'motor',
-            action: 'arrow-down'
-        });
-    });
-    socket.on('motor left', function () {
-        motor1.reverse(motorSpeed);
-        motor2.forward(motorSpeed);
-        motor3.forward(motorSpeed);
-        motor4.reverse(motorSpeed);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'motor',
-            action: 'arrow-left'
-        });
-    });
-    socket.on('motor right', function () {
-        motor1.forward(motorSpeed);
-        motor2.reverse(motorSpeed);
-        motor3.reverse(motorSpeed);
-        motor4.forward(motorSpeed);
-        io.sockets.emit('controlling', {
-            username: socket.username,
-            part: 'motor',
-            action: 'arrow-right'
-        });
-    });
-    socket.on('motor stop', function () {
-        motor1.stop();
-        motor2.stop();
-        motor3.stop();
-        motor4.stop();
-    });
 });
