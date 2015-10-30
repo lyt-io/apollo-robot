@@ -4,6 +4,8 @@ An API for a cat robot.
 
 ## Setup
 
+More documentation on this project will be added soon...
+
 Install dependencies
 
     npm install
